@@ -2,7 +2,7 @@ from fastapi import APIRouter, Body, status, HTTPException, Depends, UploadFile,
 from fastapi.responses import Response
 from config.db import proyectos_collection
 from config.jwthandler import get_current_user
-from models.proyectosModel import ProyectoModel, ProyectosCollection, UpdateProyectoModel
+from models.proyectos_model import ProyectoModel, ProyectosCollection, UpdateProyectoModel
 from bson import ObjectId
 from pymongo import ReturnDocument
 from config.saveimages import saveimage

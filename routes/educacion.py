@@ -1,15 +1,14 @@
-from fastapi import APIRouter, Body, HTTPException, status, Depends
-from fastapi.responses import Response
-from config.db import educacion_collection
+from fastapi import APIRouter, Body, status, Depends
 from config.jwthandler import get_current_user
-from models.educacionModel import EducacionModel, EducacionCollection, UpdateEducacionModel
-from bson import ObjectId
-from pymongo import ReturnDocument
+from models.educacion_model import EducacionModel, EducacionCollection, UpdateEducacionModel
+from services.educacion_service import EducacionService
 
 router = APIRouter(
     prefix='/educacion',
     tags=['educacion']
 )
+
+service = EducacionService()
 
 @router.get(
     '/',
@@ -17,8 +16,8 @@ router = APIRouter(
     response_model=EducacionCollection,
     response_model_by_alias=False
 )
-async def allEducacion():
-    return EducacionCollection(educacion=await educacion_collection.find().to_list(1000))
+async def all_educacion():
+    return await service.get_all_educacion()
 
 @router.get(
     '/{id}',
@@ -26,12 +25,8 @@ async def allEducacion():
     response_model=EducacionModel,
     response_model_by_alias=False
 )
-async def mostrarEducacion(id: str):
-    if (
-        educacion := await educacion_collection.find_one({"_id": ObjectId(id)})
-    ) is not None:
-        return educacion
-    raise HTTPException(status_code=404, detail=f"La educacion con ID: {id} no se encuentra")
+async def educacion_by_id(id: str):
+    return await service.get_educacion_by_id(id)
 
 @router.post(
     '/',
@@ -41,14 +36,8 @@ async def mostrarEducacion(id: str):
     response_model_by_alias=False,
     dependencies=[Depends(get_current_user)]
 )
-async def addEducacion(educacion: EducacionModel = Body(...)):
-    new_educacion = await educacion_collection.insert_one(
-        educacion.model_dump(by_alias=True, exclude=["id"])
-    )
-    created_educacion = await educacion_collection.find_one(
-        {"_id": new_educacion.inserted_id}
-    )
-    return created_educacion
+async def add_educacion(educacion: EducacionModel = Body(...)):
+    return await service.save_educacion(educacion)
 
 @router.put(
     '/{id}',
@@ -57,32 +46,9 @@ async def addEducacion(educacion: EducacionModel = Body(...)):
     response_model_by_alias=False,
     dependencies=[Depends(get_current_user)]
 )
-async def updateEducacion(id: str, educacion: UpdateEducacionModel = Body(...)):
-    educacion = {
-        k: v for k, v in educacion.model_dump(by_alias=True).items() if v is not None
-    }
-
-    if len(educacion) >= 1:
-        update_result = await educacion_collection.find_one_and_update(
-            {"_id": ObjectId(id)},
-            {"$set": educacion},
-            return_document=ReturnDocument.AFTER
-        )
-        if update_result is not None:
-            return update_result
-        else:
-            raise HTTPException(status_code=404, detail=f'Educacion {id} no fue encontrada')
-    
-    if (existing_educacion := await educacion_collection.find_one({"_id": id})) is not None:
-        return existing_educacion
-    
-    raise HTTPException(status_code=404, detail=f"Educacion {id} no encontrada")
+async def update_educacion(id: str, educacion: UpdateEducacionModel = Body(...)):
+    return await service.update_educacion(id, educacion)
 
 @router.delete('/{id}', description="Eliminar educacion", dependencies=[Depends(get_current_user)])
-async def deleteEducacion(id: str):
-    delete_result = await educacion_collection.delete_one({"_id": ObjectId(id)})
-
-    if delete_result.deleted_count == 1:
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
-    
-    raise HTTPException(status_code=404, detail=f"Educacion {id} no encontrada")
+async def delete_educacion(id: str):
+    return await service.delete_educacion(id)

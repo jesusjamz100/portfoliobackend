@@ -6,10 +6,7 @@ from config.mail import send_email_async, send_email_background
 from config.jwthandler import get_current_user
 
 app = FastAPI(
-    title="Curriculum",
-    openapi_url=None,
-    docs_url=None,
-    redoc_url=None
+    title="Curriculum"
 )
 
 app.add_middleware(

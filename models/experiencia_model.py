@@ -29,7 +29,7 @@ class UpdateExperienciaModel(BaseModel):
     cargo: Optional[str] = None
     startYear: Optional[int] = None
     endYear: Optional[int] = None
-    descripcion: Optional[int]
+    descripcion: Optional[str]
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
         json_encoders={ObjectId: str},
