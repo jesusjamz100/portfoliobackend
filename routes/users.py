@@ -27,7 +27,7 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
     description="Retorna un usuario si esta autenticado",
     response_model_by_alias=False
 )
-async def userMe(user: user_dependency):
+async def user_me(user: user_dependency):
     if user is None:
         raise HTTPException(status_code=401, detail='Autenticación fallida')
     return {'user': user}

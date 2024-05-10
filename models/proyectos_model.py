@@ -12,6 +12,7 @@ class ProyectoModel(BaseModel):
     endDate: Optional[str] = Field(default=None)
     githubLinks: Optional[list] = Field(default=None)
     deployLinks: Optional[list] = Field(default=None)
+    imgUrl: Optional[str] = Field(default=None)
     model_config=ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,

@@ -46,9 +46,9 @@ async def add_idioma(idioma: IdiomaModel = Body(...)):
     response_model_by_alias=False,
     dependencies=[Depends(get_current_user)]
 )
-async def updateIdioma(id: str, idioma: UpdateIdiomaModel = Body(...)):
+async def update_idioma(id: str, idioma: UpdateIdiomaModel = Body(...)):
     return await service.update_idioma(id, idioma)
 
 @router.delete('/{id}', description="Eliminar un idioma", dependencies=[Depends(get_current_user)])
-async def deleteIdioma(id: str):
+async def delete_idioma(id: str):
     return await service.delete_idioma(id)
