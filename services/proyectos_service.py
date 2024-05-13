@@ -1,12 +1,10 @@
 import json
 from fastapi import Response, HTTPException, UploadFile
-from config.db import proyectos_collection
 from config.saveimages import convert_and_resize_image, upload_to_firebase
 from repositories.proyectos_repository import ProyectoRepository
 from models.proyectos_model import ProyectoModel, ProyectosCollection, UpdateProyectoModel
-from bson import ObjectId
-from pymongo import ReturnDocument
 from pydantic import parse_obj_as
+from typing import Optional
 
 class ProyectoService:
 
@@ -37,22 +35,24 @@ class ProyectoService:
     async def delete_proyecto(self, id: str) -> Response:
         return await self.repository.delete_by_id(id)
     
-    async def update_proyecto(self, id: str, proyecto: UpdateProyectoModel) -> ProyectoModel:
+    async def update_proyecto(self, id: str, proyecto: UpdateProyectoModel, image: Optional[UploadFile]) -> ProyectoModel:
         proyecto = {
             k: v for k, v in proyecto.model_dump(by_alias=True).items() if v is not None
         }
+        if image:
+            converted_img = convert_and_resize_image(await image.read())
+            titulo = proyecto.titulo
+            link = upload_to_firebase(converted_img, titulo)
+            proyecto.imgUrl = link
+
         if len(proyecto) >= 1:
-            update_result = await proyectos_collection.find_one_and_update(
-                {"_id": ObjectId(id)},
-                {"$set": proyecto},
-                return_document=ReturnDocument.AFTER
-            )
+            update_result = await self.repository.update_by_id(id, proyecto)
             if update_result is not None:
                 return update_result
             else:
                 raise HTTPException(status_code=404, detail=f'El proyecto {id} no existe')
             
-        if (existing_proyecto := await proyectos_collection.find_one({"_id": id})) is not None:
+        if (existing_proyecto := await self.repository.get_by_id(id)) is not None:
             return existing_proyecto
         
         raise HTTPException(status_code=404, detail=f'El proyecto {id} no existe')

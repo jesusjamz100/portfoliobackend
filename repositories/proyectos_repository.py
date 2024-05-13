@@ -1,7 +1,8 @@
 from fastapi import HTTPException, Response, status
 from config.db import proyectos_collection
-from models.proyectos_model import ProyectoModel, ProyectosCollection
+from models.proyectos_model import ProyectoModel, ProyectosCollection, UpdateProyectoModel
 from bson import ObjectId
+from pymongo import ReturnDocument
 from pymongo.results import DeleteResult
 
 class ProyectoRepository:
@@ -33,3 +34,10 @@ class ProyectoRepository:
             return Response(status_code=status.HTTP_204_NO_CONTENT)
         
         raise HTTPException(status_code=404, detail=f'El proyecto {id} no existe')
+    
+    async def update_by_id(self, id: str, proyecto) -> ProyectoModel:
+        return await proyectos_collection.find_one_and_update(
+            {"_id": ObjectId(id)},
+            {"$set": proyecto},
+            return_document=ReturnDocument.AFTER
+        )

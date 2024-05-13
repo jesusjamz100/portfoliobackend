@@ -42,6 +42,7 @@ class UpdateProyectoModel(BaseModel):
     endDate: Optional[str] = None
     githubLinks: Optional[list] = None
     deployLinks: Optional[list] = None
+    imgUrl: Optional[str] = None
     model_config=ConfigDict(
         arbitrary_types_allowed=True,
         json_encoders={ObjectId: str},
