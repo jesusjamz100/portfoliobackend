@@ -6,42 +6,45 @@ import firebase_admin
 from PIL import Image
 from firebase_admin import credentials, storage
 
-def convert_and_resize_image(image_bytes: bytes):
-    image = Image.open(io.BytesIO(image_bytes))
+class ImageService:
 
-    if image.mode != "RGB":
-        image = image.convert('RGB')
+    def convert_and_resize_image(self, image_bytes: bytes):
+        image = Image.open(io.BytesIO(image_bytes))
 
-    width, height = 730, 350
-    resized_image = image.resize((width, height))
+        if image.mode != "RGB":
+            image = image.convert('RGB')
 
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        temp_file_path = temp_file.name
-        resized_image.save(temp_file_path, "JPEG")
+        width, height = 730, 350
+        resized_image = image.resize((width, height))
 
-    return temp_file_path
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            temp_file_path = temp_file.name
+            resized_image.save(temp_file_path, "JPEG")
+
+        return temp_file_path
 
 
-def upload_to_firebase(image_file: str, title: str):
+    def upload_to_firebase(self, image_file: str, title: str):
 
-    certificate_str = os.environ.get('CREDENTIALS_FB')
-    certificate_dict = json.loads(certificate_str)
+        certificate_str = os.environ.get('CREDENTIALS_FB')
+        certificate_dict = json.loads(certificate_str)
 
-    cred = credentials.Certificate(certificate_dict)
-    firebase_admin.initialize_app(cred)
+        cred = credentials.Certificate(certificate_dict)
+        firebase_admin.initialize_app(cred)
 
-    bucket = storage.bucket(os.environ.get('BUCKET_FB'))
+        bucket = storage.bucket(os.environ.get('BUCKET_FB'))
 
-    blob = bucket.blob(f'portfolioimgs/{title}.jpg')
-    
-    blob.upload_from_filename(image_file, content_type='image/jpeg')
-    
-    blob.make_public()
+        blob = bucket.blob(f'portfolioimgs/{title}.jpg')
+        
+        blob.upload_from_filename(image_file, content_type='image/jpeg')
+        
+        blob.make_public()
 
-    os.remove(image_file)
+        os.remove(image_file)
 
-    return blob.public_url
+        return blob.public_url
 
+images_service = ImageService()
 
 # SCOPES = ['https://www.googleapis.com/auth/drive']
 

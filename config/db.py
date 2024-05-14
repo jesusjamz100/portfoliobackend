@@ -1,13 +1,10 @@
 import os
-from dotenv import load_dotenv
 from motor import motor_asyncio
 from pydantic.functional_validators import BeforeValidator
 
 from typing_extensions import Annotated
 
-load_dotenv()
-
-client = motor_asyncio.AsyncIOMotorClient(os.environ["MONGODB_URL"])
+client = motor_asyncio.AsyncIOMotorClient(os.environ.get("MONGODB_URL"))
 db = client.get_database("curriculum")
 
 users_collection = db.get_collection("users")
