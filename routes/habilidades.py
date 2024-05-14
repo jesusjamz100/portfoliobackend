@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Body, status, Depends
-from config.jwthandler import get_current_user
+from services.jwt_service import jwt_service
 from models.habilidades_model import HabilidadModel, UpdateHabilidadModel, HabilidadesCollection
 from services.habilidades_service import HabilidadesService
 
@@ -34,7 +34,7 @@ async def habilidad_by_id(id: str):
     response_model=HabilidadModel,
     status_code=status.HTTP_201_CREATED,
     response_model_by_alias=False,
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(jwt_service.get_current_user)]
 )
 async def add_habilidad(habilidad: HabilidadModel = Body(...)):
     return await service.save_habilidad(habilidad)
@@ -44,11 +44,11 @@ async def add_habilidad(habilidad: HabilidadModel = Body(...)):
     description="Actualizar una habilidad",
     response_model=HabilidadModel,
     response_model_by_alias=False,
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(jwt_service.get_current_user)]
 )
 async def update_habilidad(id: str, habilidad: UpdateHabilidadModel = Body(...)):
     return await service.update_habilidad(id, habilidad)
 
-@router.delete('/{id}', description="Eliminar una habilidad", dependencies=[Depends(get_current_user)])
+@router.delete('/{id}', description="Eliminar una habilidad", dependencies=[Depends(jwt_service.get_current_user)])
 async def delete_habilidad(id: str):
     return await service.delete_habilidad(id)

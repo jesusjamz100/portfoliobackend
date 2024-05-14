@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Body, status, Depends
-from config.jwthandler import get_current_user
+from services.jwt_service import jwt_service
 from models.idiomas_model import IdiomaCollection, IdiomaModel, UpdateIdiomaModel
 from services.idiomas_service import IdiomaService
 
@@ -34,7 +34,7 @@ async def idioma_by_id(id: str):
     response_model=IdiomaModel,
     status_code=status.HTTP_201_CREATED,
     response_model_by_alias=False,
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(jwt_service.get_current_user)]
 )
 async def add_idioma(idioma: IdiomaModel = Body(...)):
     return await service.save_idioma(idioma)
@@ -44,11 +44,11 @@ async def add_idioma(idioma: IdiomaModel = Body(...)):
     description="Actualizar un idioma",
     response_model=IdiomaModel,
     response_model_by_alias=False,
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(jwt_service.get_current_user)]
 )
 async def update_idioma(id: str, idioma: UpdateIdiomaModel = Body(...)):
     return await service.update_idioma(id, idioma)
 
-@router.delete('/{id}', description="Eliminar un idioma", dependencies=[Depends(get_current_user)])
+@router.delete('/{id}', description="Eliminar un idioma", dependencies=[Depends(jwt_service.get_current_user)])
 async def delete_idioma(id: str):
     return await service.delete_idioma(id)

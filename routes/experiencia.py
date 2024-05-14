@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Body, status, Depends
-from config.jwthandler import get_current_user
+from services.jwt_service import jwt_service
 from models.experiencia_model import ExperienciaModel, UpdateExperienciaModel, ExperienciaCollection
 from services.experiencia_service import ExperienciaService
 
@@ -34,7 +34,7 @@ async def experiencia_by_id(id: str):
     response_model=ExperienciaModel,
     status_code=status.HTTP_201_CREATED,
     response_model_by_alias=False,
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(jwt_service.get_current_user)]
 )
 async def add_experiencia(experiencia: ExperienciaModel = Body(...)):
     return await service.save_experiencia(experiencia)
@@ -44,11 +44,11 @@ async def add_experiencia(experiencia: ExperienciaModel = Body(...)):
     description="Actualizar una experiencia laboral",
     response_model=ExperienciaModel,
     response_model_by_alias=False,
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(jwt_service.get_current_user)]
 )
 async def update_experiencia(id: str, experiencia: UpdateExperienciaModel = Body(...)):
     return await service.update_experiencia(id, experiencia)
 
-@router.delete('/{id}', description="Eliminar una experiencia", dependencies=[Depends(get_current_user)])
+@router.delete('/{id}', description="Eliminar una experiencia", dependencies=[Depends(jwt_service.get_current_user)])
 async def delete_experiencia(id: str):
     return await service.delete_experiencia(id)
