@@ -1,9 +1,9 @@
 from fastapi import FastAPI, Body, BackgroundTasks, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from routes import users, educacion, experiencia, idiomas, habilidades, proyectos
-from models.mensajeModel import MensajeModel
-from config.mail import send_email_async, send_email_background
-from config.jwthandler import get_current_user
+from models.mensaje_model import MensajeModel
+from services.contact_service import contact_service
+from services.jwt_service import jwt_service
 
 app = FastAPI(
     title="Curriculum"
@@ -28,7 +28,7 @@ app.include_router(proyectos.router)
 async def root():
     return {"message": "Bienvenido a mi curriculum"}
 
-@app.get('/user', dependencies=[Depends(get_current_user)])
+@app.get('/user', dependencies=[Depends(jwt_service.get_current_user)])
 async def checkAuth():
     return {'user': True}
 
@@ -38,7 +38,7 @@ async def checkAuth():
     response_model_by_alias=False
 )
 async def contacto_async(mensaje: MensajeModel = Body(...)):
-    return await send_email_async(mensaje.nombre, mensaje.email, mensaje.mensaje)
+    return await contact_service.send_email_async(mensaje.nombre, mensaje.email, mensaje.mensaje)
 
 @app.post(
     '/contacto/background',
@@ -46,4 +46,4 @@ async def contacto_async(mensaje: MensajeModel = Body(...)):
     response_model_by_alias=False
 )
 def contacto_backgound(background_tasks: BackgroundTasks, mensaje: MensajeModel = Body(...)):
-    return send_email_background(background_tasks, mensaje.nombre, mensaje.email, mensaje.mensaje)
+    return contact_service.send_email_background(background_tasks, mensaje.nombre, mensaje.email, mensaje.mensaje)
