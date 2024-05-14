@@ -1,6 +1,6 @@
 import json
 from fastapi import Response, HTTPException, UploadFile
-from config.saveimages import convert_and_resize_image, upload_to_firebase
+from services.images_service import images_service
 from repositories.proyectos_repository import ProyectoRepository
 from models.proyectos_model import ProyectoModel, ProyectosCollection, UpdateProyectoModel
 from pydantic import parse_obj_as
@@ -21,10 +21,10 @@ class ProyectoService:
         
         proyecto_dict = json.loads(proyecto)
 
-        converted_img = convert_and_resize_image(await image.read())
+        converted_img = images_service.convert_and_resize_image(await image.read())
         titulo = proyecto_dict['titulo']
 
-        link = upload_to_firebase(converted_img, titulo)
+        link = images_service.upload_to_firebase(converted_img, titulo)
 
         proyecto_dict['imgUrl'] = link
 
@@ -40,10 +40,10 @@ class ProyectoService:
             k: v for k, v in proyecto.model_dump(by_alias=True).items() if v is not None
         }
         if image:
-            converted_img = convert_and_resize_image(await image.read())
+            converted_img = images_service.convert_and_resize_image(await image.read())
             titulo = proyecto.titulo
-            link = upload_to_firebase(converted_img, titulo)
-            proyecto.imgUrl = link
+            link = images_service.upload_to_firebase(converted_img, titulo)
+            proyecto['imgUrl'] = link
 
         if len(proyecto) >= 1:
             update_result = await self.repository.update_by_id(id, proyecto)
