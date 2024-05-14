@@ -1,8 +1,8 @@
-from fastapi import HTTPException, Response, status
 from config.db import habilidades_collection
 from models.habilidades_model import HabilidadModel, HabilidadesCollection
 from bson import ObjectId
 from pymongo.results import DeleteResult
+from pymongo import ReturnDocument
 
 class HabilidadesRepository:
 
@@ -10,11 +10,7 @@ class HabilidadesRepository:
         return HabilidadesCollection(habilidades=await habilidades_collection.find().to_list(1000))
     
     async def get_by_id(self, id: str) -> HabilidadModel:
-        if (
-            habilidad := await habilidades_collection.find_one({"_id": ObjectId(id)})
-        ) is not None:
-            return habilidad
-        raise HTTPException(status_code=404, detail=f'La habilidad {id} no existe')
+        return await habilidades_collection.find_one({"_id": ObjectId(id)})
     
     async def save(self, habilidad: HabilidadModel) -> HabilidadModel:
         new_habilidad = await habilidades_collection.insert_one(
@@ -25,7 +21,12 @@ class HabilidadesRepository:
         )
         return created_habilidad
     
-    async def delete_by_id(self, id: str):
-        delete_result: DeleteResult = await habilidades_collection.delete_one({"_id": ObjectId(id)})
-        if delete_result.deleted_count == 1:
-            return Response(status_code=status.HTTP_204_NO_CONTENT)
+    async def delete_by_id(self, id: str) -> DeleteResult:
+        return await habilidades_collection.delete_one({"_id": ObjectId(id)})
+    
+    async def update_by_id(self, id: str, habilidad) -> HabilidadModel:
+        return await habilidades_collection.find_one_and_update(
+                {"_id": ObjectId(id)},
+                {"$set": habilidad},
+                return_document=ReturnDocument.AFTER
+            )

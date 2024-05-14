@@ -1,8 +1,8 @@
-from fastapi import HTTPException, Response, status
 from config.db import educacion_collection
 from models.educacion_model import EducacionCollection, EducacionModel
 from bson import ObjectId
 from pymongo.results import DeleteResult
+from pymongo import ReturnDocument
 
 class EducacionRepository:
 
@@ -10,11 +10,7 @@ class EducacionRepository:
         return EducacionCollection(educacion=await educacion_collection.find().to_list(1000))
 
     async def get_by_id(self, id: str) -> EducacionModel:
-        if (
-            educacion := await educacion_collection.find_one({"_id": ObjectId(id)})
-        ) is not None:
-            return educacion
-        raise HTTPException(status_code=404, detail=f"La educacion con ID: {id} no se encuentra")
+        return await educacion_collection.find_one({"_id": ObjectId(id)})
     
     async def save(self, educacion: EducacionModel) -> EducacionModel:
         new_educacion = await educacion_collection.insert_one(
@@ -25,10 +21,12 @@ class EducacionRepository:
         )
         return created_educacion
     
-    async def delete_by_id(self, id: str):
-        delete_result: DeleteResult = await educacion_collection.delete_one({"_id": ObjectId(id)})
-
-        if delete_result.deleted_count == 1:
-            return Response(status_code=status.HTTP_204_NO_CONTENT)
-        
-        raise HTTPException(status_code=404, detail=f"Educacion {id} no encontrada")
+    async def delete_by_id(self, id: str) -> DeleteResult:
+        return await educacion_collection.delete_one({"_id": ObjectId(id)})
+    
+    async def update_by_id(self, id: str, educacion) -> EducacionModel:
+        return await educacion_collection.find_one_and_update(
+                {"_id": ObjectId(id)},
+                {"$set": educacion},
+                return_document=ReturnDocument.AFTER
+            )

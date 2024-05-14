@@ -1,8 +1,8 @@
-from fastapi import HTTPException, Response, status
 from config.db import experiencia_collection
 from models.experiencia_model import ExperienciaModel, ExperienciaCollection
 from bson import ObjectId
 from pymongo.results import DeleteResult
+from pymongo import ReturnDocument
 
 class ExperienciaRepository:
 
@@ -10,11 +10,8 @@ class ExperienciaRepository:
         return ExperienciaCollection(experiencia=await experiencia_collection.find().to_list(1000))
     
     async def get_by_id(self, id: str) -> ExperienciaModel:
-        if (
-            experiencia := await experiencia_collection.find_one({"_id": ObjectId(id)})
-        ) is not None:
-            return experiencia
-        raise HTTPException(status_code=404, detail=f"La experiencia con ID: {id} no se encuentra")
+        return await experiencia_collection.find_one({"_id": ObjectId(id)})
+        
     
     async def save(self, experiencia: ExperienciaModel) -> ExperienciaModel:
         new_experiencia = await experiencia_collection.insert_one(
@@ -25,10 +22,12 @@ class ExperienciaRepository:
         )
         return created_experiencia
     
-    async def delete_by_id(self, id: str):
-        delete_result: DeleteResult = await experiencia_collection.delete_one({"_id": ObjectId(id)})
-
-        if delete_result.deleted_count == 1:
-            return Response(status_code=status.HTTP_204_NO_CONTENT)
-        
-        raise HTTPException(status_code=404, detail=f"Experiencia {id} no encontrada")
+    async def delete_by_id(self, id: str) ->  DeleteResult:
+        return await experiencia_collection.delete_one({"_id": ObjectId(id)})
+    
+    async def update_by_id(self, id: str, experiencia) -> ExperienciaModel:
+        return await experiencia_collection.find_one_and_update(
+            {"_id": ObjectId(id)},
+            {"$set": experiencia},
+            return_document=ReturnDocument.AFTER
+        )

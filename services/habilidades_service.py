@@ -1,9 +1,7 @@
-from fastapi import Response, HTTPException
-from config.db import habilidades_collection
+from fastapi import Response, HTTPException, status
 from repositories.habilidades_repository import HabilidadesRepository
 from models.habilidades_model import HabilidadModel, HabilidadesCollection, UpdateHabilidadModel
-from bson import ObjectId
-from pymongo import ReturnDocument
+from pymongo.results import DeleteResult
 
 class HabilidadesService:
 
@@ -14,13 +12,20 @@ class HabilidadesService:
         return await self.repository.get_all()
     
     async def get_habilidad_by_id(self, id: str) -> HabilidadModel:
-        return await self.repository.get_by_id(id)
+        habilidad = await self.repository.get_by_id(id)
+        if habilidad:
+            return habilidad
+        raise HTTPException(status_code=404, detail=f"La habilidad con ID: {id} no se encuentra")
     
     async def save_habilidad(self, habilidad: HabilidadModel) -> HabilidadModel:
         return await self.repository.save(habilidad)
 
     async def delete_habilidad(self, id: str) -> Response:
-        return await self.repository.delete_by_id(id)
+        delete_result: DeleteResult = await self.repository.delete_by_id(id)
+        if delete_result.deleted_count == 1:
+            return Response(status_code=status.HTTP_204_NO_CONTENT)
+        
+        raise HTTPException(status_code=404, detail=f"Educacion {id} no encontrada")
     
     async def update_habilidad(self, id: str, habilidad: UpdateHabilidadModel) -> HabilidadModel:
         habilidad = {
@@ -28,17 +33,13 @@ class HabilidadesService:
         }
 
         if len(habilidad) >= 1:
-            update_result = await habilidades_collection.find_one_and_update(
-                {"_id": ObjectId(id)},
-                {"$set": habilidad},
-                return_document=ReturnDocument.AFTER
-            )
+            update_result = await self.repository.update_by_id(id, habilidad)
             if update_result is not None:
                 return update_result
             else:
                 HTTPException(status_code=404, detail=f'Habilidad {id} no encontrada')
         
-        if (existing_habilidad := await habilidades_collection.find_one({"_id": id})) is not None:
+        if (existing_habilidad := await self.repository.get_by_id(id)) is not None:
             return existing_habilidad
         
         raise HTTPException(status_code=404, detail=f'Habilidad {id} no encontrada')
