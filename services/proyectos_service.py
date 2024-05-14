@@ -36,7 +36,17 @@ class ProyectoService:
         return await self.repository.save(proyecto_model)
     
     async def delete_proyecto(self, id: str) -> Response:
-        delete_result: DeleteResult = await self.repository.delete_by_id(id)
+        proyecto = await self.repository.get_by_id(id)
+
+        if proyecto:
+            try:
+                delete_image = images_service.delete_from_firebase(proyecto['titulo'])
+            except Exception:
+                raise HTTPException(status_code=500, detail=f"Hubo un error con el servidor")
+            
+        if delete_image:
+            delete_result: DeleteResult = await self.repository.delete_by_id(id)
+
         if delete_result.deleted_count == 1:
             return Response(status_code=status.HTTP_204_NO_CONTENT)
         

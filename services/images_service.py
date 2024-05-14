@@ -43,6 +43,25 @@ class ImageService:
         os.remove(image_file)
 
         return blob.public_url
+    
+    def delete_from_firebase(self, title: str):
+
+        certificate_str = os.environ.get('CREDENTIALS_FB')
+        certificate_dict = json.loads(certificate_str)
+
+        cred = credentials.Certificate(certificate_dict)
+        firebase_admin.initialize_app(cred)
+
+        bucket = storage.bucket(os.environ.get('BUCKET_FB'))
+
+        try:
+            blob = bucket.blob(f'portfolioimgs/{title}.jpg')
+
+            blob.delete()
+            
+            return True
+        except Exception as e:
+            return False
 
 images_service = ImageService()
 
