@@ -1,18 +1,14 @@
 from datetime import timedelta
 
 from fastapi import APIRouter, Body, HTTPException, status, Depends
-from fastapi.responses import Response, JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.encoders import jsonable_encoder
 from config.db import users_collection
-from models.usersModel import UserModel, UsersCollection, UpdateUserModel
-from models.tokenModel import TokenData
-from bson import ObjectId
+from models.users_model import UserModel
+from models.token_model import TokenData
 from passlib.context import CryptContext
-from pymongo import ReturnDocument
-from config.auth import validate_user
+from services.auth_service import AuthService
 from typing import Annotated
-from config.jwthandler import create_access_token, get_current_user
+from services.jwt_service import jwt_service
 
 router = APIRouter(
     prefix='/users',
@@ -20,7 +16,8 @@ router = APIRouter(
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-user_dependency = Annotated[dict, Depends(get_current_user)]
+user_dependency = Annotated[dict, Depends(jwt_service.get_current_user)]
+auth_service = AuthService()
 
 @router.get(
     '/me',
@@ -38,7 +35,7 @@ async def user_me(user: user_dependency):
     response_model=UserModel,
     status_code=status.HTTP_201_CREATED,
     response_model_by_alias=False,
-    # dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(jwt_service.get_current_user)]
 )
 async def create_user(user: UserModel = Body(...)):
     user.password = pwd_context.encrypt(user.password)
@@ -58,8 +55,8 @@ async def create_user(user: UserModel = Body(...)):
 
 @router.post('/token', response_model=TokenData)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    user = await validate_user(form_data)
+    user = await auth_service.validate_user(form_data)
 
-    token = create_access_token(user['username'], timedelta(minutes=20))
+    token = jwt_service.create_access_token(user['username'], timedelta(minutes=20))
 
     return {'access_token': token, 'token_type': 'bearer'}
