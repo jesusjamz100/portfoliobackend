@@ -5,6 +5,7 @@ import tempfile
 import firebase_admin
 from PIL import Image
 from firebase_admin import credentials, storage
+import firebase_admin.app_check
 
 class ImageService:
 
@@ -29,8 +30,9 @@ class ImageService:
         certificate_str = os.environ.get('CREDENTIALS_FB')
         certificate_dict = json.loads(certificate_str)
 
-        cred = credentials.Certificate(certificate_dict)
-        firebase_admin.initialize_app(cred)
+        if not firebase_admin._apps:
+            cred = credentials.Certificate(certificate_dict)
+            firebase_admin.initialize_app(cred)
 
         bucket = storage.bucket(os.environ.get('BUCKET_FB'))
 
@@ -49,8 +51,9 @@ class ImageService:
         certificate_str = os.environ.get('CREDENTIALS_FB')
         certificate_dict = json.loads(certificate_str)
 
-        cred = credentials.Certificate(certificate_dict)
-        firebase_admin.initialize_app(cred)
+        if not firebase_admin._apps:
+            cred = credentials.Certificate(certificate_dict)
+            firebase_admin.initialize_app(cred)
 
         bucket = storage.bucket(os.environ.get('BUCKET_FB'))
 
