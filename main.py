@@ -6,7 +6,10 @@ from services.contact_service import contact_service
 from services.jwt_service import jwt_service
 
 app = FastAPI(
-    title="Curriculum"
+    title="Curriculum",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None
 )
 
 app.add_middleware(
