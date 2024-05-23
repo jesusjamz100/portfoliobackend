@@ -46,22 +46,27 @@ class ProyectoService:
             
         if delete_image:
             delete_result: DeleteResult = await self.repository.delete_by_id(id)
+        else:
+            return HTTPException(status_code=500, detail=f"Hubo un error con el servidor")
 
         if delete_result.deleted_count == 1:
             return Response(status_code=status.HTTP_204_NO_CONTENT)
         
         raise HTTPException(status_code=404, detail=f"Proyecto {id} no encontrado")
     
-    async def update_proyecto(self, id: str, proyecto: UpdateProyectoModel, image: Optional[UploadFile] = None) -> ProyectoModel:
-        proyecto = {
-            k: v for k, v in proyecto.model_dump(by_alias=True).items() if v is not None
-        }
+    async def update_proyecto(self, id: str, proyecto: str, image: Optional[UploadFile] = None) -> ProyectoModel:
+        proyecto = json.loads(proyecto)
         
         if image:
-            converted_img = images_service.convert_and_resize_image(await image.read())
-            titulo = proyecto.titulo
-            link = images_service.upload_to_firebase(converted_img, titulo)
-            proyecto['imgUrl'] = link
+            titulo = proyecto['titulo']
+            deleted_image = images_service.delete_from_firebase(titulo)
+            
+            if deleted_image:
+                converted_img = images_service.convert_and_resize_image(await image.read())
+                link = images_service.upload_to_firebase(converted_img, titulo)
+                proyecto['imgUrl'] = link
+            else:
+                return HTTPException(status_code=500, detail=f"Hubo un error con el servidor")
 
         if len(proyecto) >= 1:
             update_result = await self.repository.update_by_id(id, proyecto)
