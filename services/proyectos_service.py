@@ -59,14 +59,14 @@ class ProyectoService:
         
         if image:
             titulo = proyecto['titulo']
-            deleted_image = images_service.delete_from_firebase(titulo)
+            if proyecto['imgUrl']:
+                deleted_image = images_service.delete_from_firebase(titulo)
+                if not deleted_image:
+                    return HTTPException(status_code=500, detail=f"Hubo un error con el servidor")
             
-            if deleted_image:
-                converted_img = images_service.convert_and_resize_image(await image.read())
-                link = images_service.upload_to_firebase(converted_img, titulo)
-                proyecto['imgUrl'] = link
-            else:
-                return HTTPException(status_code=500, detail=f"Hubo un error con el servidor")
+            converted_img = images_service.convert_and_resize_image(await image.read())
+            link = images_service.upload_to_firebase(converted_img, titulo)
+            proyecto['imgUrl'] = link
 
         if len(proyecto) >= 1:
             update_result = await self.repository.update_by_id(id, proyecto)
