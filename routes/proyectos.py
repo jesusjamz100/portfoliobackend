@@ -47,8 +47,8 @@ async def add_proyecto(proyecto: str = Form(...), image: UploadFile = File(...))
     response_model_by_alias=False,
     dependencies=[Depends(jwt_service.get_current_user)]
 )
-async def update_proyecto(id: str, proyecto: UpdateProyectoModel = Body(...)):
-    return await service.update_proyecto(id, proyecto)
+async def update_proyecto(id: str, proyecto: str = Form(...), image: UploadFile = File(None)):
+    return await service.update_proyecto(id, proyecto, image)
 
 @router.delete('/{id}', description="Eliminar un proyecto", dependencies=[Depends(jwt_service.get_current_user)])
 async def delete_proyecto(id: str):
